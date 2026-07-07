@@ -1,0 +1,23 @@
+[project]
+name = "autonomy-budget"
+version = "0.1.0"
+description = "Autonomy Error Budget (AEB) and Authority Ladder: SLO-driven authority management for autonomous AI operators, with the paper's simulation study"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ajin Baby" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
