@@ -15,6 +15,9 @@ Regimes:
                    Ladder (the paper's proposal, composed via the min rule).
 """
 
+import heapq
+import itertools
+import math
 import random
 from collections import deque
 from dataclasses import dataclass, field
@@ -51,6 +54,8 @@ class SimParams:
     evidence_window: int = 720
     evidence_threshold: float = 0.97   # trailing concordance required to promote
     evidence_min: int = 50             # minimum adjudicated proposals
+    adjudication_lag: float = 0.0      # mean ticks between execution and verdict
+    adjudication_lag_jitter: float = 0.0  # lognormal sd on the lag (mean-preserving)
 
 
 @dataclass
@@ -130,8 +135,44 @@ def run_sim(op, regime, params, static_rung=AUTONOMOUS):
                              promotion_window=params.promotion_window,
                              require_evidence=params.require_evidence)
     evidence = deque()  # (t, observed_good) adjudicated proposals
+    pending = []        # min-heap of (due_tick, seq, kind, observed_wrong, sev)
+    seq = itertools.count()
     incident_ticks = 0
     appropriate_ticks = 0
+
+    def adjudication_lag():
+        """Ticks between an action executing and its verdict reaching the budget.
+
+        The verdict CONTENT is still drawn at execution time (adjudicate());
+        the lag defers only when the budget and evidence stream LEARN it —
+        modelling a pipeline that decides correctly but slowly. The jittered
+        draw is mean-preserving lognormal so a jittered pipeline can be
+        compared against a constant-lag pipeline at the same mean.
+        """
+        if params.adjudication_lag <= 0:
+            return 0
+        lag = params.adjudication_lag
+        if params.adjudication_lag_jitter > 0:
+            sigma = params.adjudication_lag_jitter
+            lag *= math.exp(rng.gauss(0.0, sigma) - sigma * sigma / 2.0)
+        return max(0, round(lag))
+
+    def deliver_verdict(t_adj, kind, observed_wrong, sev):
+        if kind == "auto":
+            if observed_wrong:
+                budget.record_wrong_action(t_adj, sev)
+            else:
+                budget.record_correct_action(t_adj)
+        evidence.append((t_adj, not observed_wrong))
+
+    def record_verdict(t, kind, observed_wrong, sev=0.0):
+        """Apply a verdict now (lag 0 — the pre-lag code path, bit-for-bit)
+        or queue it for the tick the adjudication pipeline finishes."""
+        lag = adjudication_lag()
+        if lag == 0:
+            deliver_verdict(t, kind, observed_wrong, sev)
+        else:
+            heapq.heappush(pending, (t + lag, next(seq), kind, observed_wrong, sev))
 
     def adjudicate(wrong):
         if params.adjudication_noise and rng.random() < params.adjudication_noise:
@@ -151,7 +192,7 @@ def run_sim(op, regime, params, static_rung=AUTONOMOUS):
         observed_wrong = adjudicate(wrong)  # one verdict per action
         if wrong and not caught:
             res.harm += sev
-        evidence.append((t, not observed_wrong))
+        record_verdict(t, "evidence", observed_wrong)
 
     def autonomous_handle(t, wrong, sev, gated):
         if gated and sev == MAJOR_WEIGHT:
@@ -160,14 +201,17 @@ def run_sim(op, regime, params, static_rung=AUTONOMOUS):
         if wrong:
             res.harm += sev
         observed_wrong = adjudicate(wrong)
-        if observed_wrong:
-            budget.record_wrong_action(t, sev)
-        else:
-            budget.record_correct_action(t)
-        evidence.append((t, not observed_wrong))
+        record_verdict(t, "auto", observed_wrong, sev)
 
     for t in range(params.horizon):
         p = op.wrong_rate(t, params.horizon)
+
+        # Verdicts whose adjudication pipeline finishes this tick reach the
+        # budget and evidence stream now — before the rung decision, exactly
+        # as a dashboard refresh would precede a governance action.
+        while pending and pending[0][0] <= t:
+            _, _, kind, observed_wrong, sev = heapq.heappop(pending)
+            deliver_verdict(t, kind, observed_wrong, sev)
 
         if regime == REGIME_AEB:
             while evidence and evidence[0][0] <= t - params.evidence_window:
@@ -198,7 +242,7 @@ def run_sim(op, regime, params, static_rung=AUTONOMOUS):
                 supervised_handle(t, wrong, sev)
             else:  # ADVISORY / DISABLED: humans handle; operator shadows for evidence
                 res.toil += params.manual_toil
-                evidence.append((t, not adjudicate(wrong)))
+                record_verdict(t, "evidence", adjudicate(wrong))
 
     res.transitions = list(ladder.transitions)
     if op.step_at is not None:

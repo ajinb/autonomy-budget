@@ -21,6 +21,21 @@ authority:
   populations with step degradations (silent model updates) and gradual
   drifts (context rot).
 
+## E4: adjudication latency (v0.3)
+
+The budget acts on adjudicated outcomes, and adjudication lags reality.
+`examples/adjudication_study.py` measures what the lag costs (`adjudication_lag`
+/ `adjudication_lag_jitter` on `SimParams`):
+
+- a **constant** lag translates detection latency by **exactly the lag**,
+  seed-for-seed (constant-lag runs consume an identical RNG stream to lag-0
+  runs, so this is checked per seed, not on average), and the fast-burn
+  alert's ~40 h advantage over window exhaustion survives intact;
+- a **jittered** pipeline at the same 72 h mean leaves mean detection nearly
+  unchanged but degrades the median 15% (139 -> 160 h) and widens dispersion
+  36% (sd 44 -> 60 h): lag *variance* costs predictability, which for a
+  governance mechanism is the quantity that matters.
+
 ## Run the study
 
 ```bash
