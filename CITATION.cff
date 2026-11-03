@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: "autonomy-budget"
+message: "If you use this software, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: Baby
+    given-names: Ajin
+    orcid: "https://orcid.org/0009-0007-6190-9516"
+repository-code: "https://github.com/ajinb/autonomy-budget"
+url: "https://cloudandsre.com"
+abstract: "Autonomy Error Budget (AEB) and Authority Ladder: SLO-driven authority management for autonomous AI operators, with the paper's simulation study."
+license: Apache-2.0
+version: "0.1.0"
+date-released: "2026-11-02"
+keywords:
+  - ai-agents
+  - bounded-autonomy
+  - self-adaptive-systems
+  - error-budget
+  - sre
