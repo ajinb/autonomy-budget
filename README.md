@@ -31,10 +31,30 @@ The budget acts on adjudicated outcomes, and adjudication lags reality.
   seed-for-seed (constant-lag runs consume an identical RNG stream to lag-0
   runs, so this is checked per seed, not on average), and the fast-burn
   alert's ~40 h advantage over window exhaustion survives intact;
-- a **jittered** pipeline at the same 72 h mean leaves mean detection nearly
-  unchanged but degrades the median 15% (139 -> 160 h) and widens dispersion
-  36% (sd 44 -> 60 h): lag *variance* costs predictability, which for a
-  governance mechanism is the quantity that matters.
+- a **jittered** pipeline at the same 72 h mean: v0.3 reported a 15% median
+  and 36% spread penalty from 20 seeds. At 400 seeds neither holds (see
+  Errata below).
+
+## Errata (paper v0.3.1)
+
+`examples/errata_v0_3_1.py` reproduces every number in the paper's v0.3.1
+correction against this unchanged simulator (about two minutes):
+
+1. The E4 jitter effects on median, p90 and spread are not distinguishable
+   from zero at 400 seeds.
+2. `derived_allowance()` denominates the allowance over all actions, including
+   the major class the per-action gate routes to review, so the budget is
+   1.64x looser than its SLO. E1–E3 still confirm H1–H3 with the governed
+   denomination; detection is about 2x faster than v0.3 reported.
+3. A lag-0 verdict is applied after the tick's rung decision, a lagged one
+   before it. Against a 1 h pipeline, constant lag L shifts detection by
+   exactly L − 1 h in 400/400 seeds.
+4. With 24–168 h of lag, in-flight verdicts push the ladder below supervised
+   after the step in 42–98% of runs, at 3.5–6.6x the lag-0 cost.
+
+```bash
+.venv/bin/python examples/errata_v0_3_1.py
+```
 
 ## Run the study
 
@@ -49,7 +69,7 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 - **Static tiers are U-shaped; the budget tracks the oracle at both ends.**
   Static-autonomous costs 3.9x the budget-governed regime under a silent step
   degradation; static-supervised costs 3.9x under a reliable operator. AEB
-  governance stays within ~8% of the full-knowledge oracle at both extremes.
+  governance stays within 9% of the full-knowledge oracle at both extremes.
 - **Burn-rate demotion detects silent degradation 2.7–5.1x faster than
   monthly track-record review** (20/20 detected), with latency set by action
   volume and budget geometry rather than review cadence.
@@ -67,4 +87,4 @@ Two design rules the simulation surfaced (§4/§5 of the paper):
    human-approved executions creates a demotion spiral in which the budget
    can never recover at any rung below autonomous.
 
-MIT license.
+[Apache-2.0](LICENSE).
