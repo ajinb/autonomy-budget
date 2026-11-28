@@ -1,7 +1,7 @@
 # autonomy-budget
 
-Reference implementation and simulation study for **"Error Budgets for Autonomy:
-SLO-Driven Authority Management for Autonomous AI Operators"** (Ajin Baby, 2026).
+Reference implementation and simulation study for **["Error Budgets for Autonomy:
+SLO-Driven Authority Management for Autonomous AI Operators"](https://cloudandsre.com/research/error-budgets-for-autonomy/)** (Ajin Baby, 2026).
 
 AI operators are being granted standing authority over production
 infrastructure. This library transplants SRE error-budget semantics onto that
@@ -54,6 +54,24 @@ correction against this unchanged simulator (about two minutes):
 
 ```bash
 .venv/bin/python examples/errata_v0_3_1.py
+```
+
+## Paper
+
+This repository is the companion code for the preprint **[Error Budgets for Autonomy: SLO-Driven Authority Management for Autonomous AI Operators](https://cloudandsre.com/research/error-budgets-for-autonomy/)**
+(Ajin Baby, September 2026, v0.3.1 with a correction dated 28 November 2026, not peer reviewed).
+Full text: [PDF](https://ajinb.github.io/research/error-budgets-for-autonomy/error-budgets-for-autonomy.pdf) · [paper page](https://ajinb.github.io/research/error-budgets-for-autonomy/) ·
+[all papers](https://ajinb.github.io/research/).
+
+```bibtex
+@techreport{baby2026error,
+  title       = {Error Budgets for Autonomy: SLO-Driven Authority Management for Autonomous AI Operators},
+  author      = {Ajin Baby},
+  year        = {2026},
+  institution = {cloudandsre.com},
+  type        = {Preprint},
+  url         = {https://cloudandsre.com/research/error-budgets-for-autonomy/}
+}
 ```
 
 ## Run the study

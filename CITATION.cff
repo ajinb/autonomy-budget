@@ -18,3 +18,16 @@ keywords:
   - self-adaptive-systems
   - error-budget
   - sre
+preferred-citation:
+  type: report
+  title: "Error Budgets for Autonomy: SLO-Driven Authority Management for Autonomous AI Operators"
+  authors:
+    - family-names: Baby
+      given-names: Ajin
+      orcid: "https://orcid.org/0009-0007-6190-9516"
+  institution:
+    name: cloudandsre.com
+  year: 2026
+  month: 9
+  url: "https://cloudandsre.com/research/error-budgets-for-autonomy/"
+  notes: "Preprint, not peer reviewed. v0.3.1 carries a correction dated 2026-11-28. Full text: https://ajinb.github.io/research/error-budgets-for-autonomy/error-budgets-for-autonomy.pdf"
